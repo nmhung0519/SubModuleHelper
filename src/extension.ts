@@ -8,9 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Your extension "git-commit-push" is now active!');
 	let checkoutAllCommand = vscode.commands.registerCommand('submodule-helper.checkoutAll', async () => {
         try {
-			// const repoPath = vscode.workspace.rootPath || '';
-			const repoPath = 'C:\\Users\\hung.nm4\\MProjects\\TurnAny.WebApi';
-
+			const repoPath = vscode.workspace.rootPath || '';
 			if (repoPath) {
 				var branchName = await checkOutMainRepo(repoPath);
 				if (branchName !== undefined) {
