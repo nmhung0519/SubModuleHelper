@@ -65,7 +65,7 @@ async function commitSubmodules(repoPath: string, message: string) {
         try {
             const submoduleGit = simpleGit(dir);
             const status = await submoduleGit.status();
-            if (status.modified.length > 0 || status.staged.length > 0) {
+            if (status.files.length > 0 || status.staged.length > 0) {
                 await submoduleGit.add('./*');
                 await submoduleGit.commit(message);
             }
@@ -78,7 +78,7 @@ async function commitSubmodules(repoPath: string, message: string) {
 async function commitMainRepo(repoPath: string, message: string) {
     const mainRepoGit = simpleGit(repoPath);
     const status = await mainRepoGit.status();
-    if (status.modified.length > 0 || status.staged.length > 0) {
+    if (status.files.length > 0) {
         await mainRepoGit.add('./*');
         await mainRepoGit.commit(message);
     }
@@ -90,7 +90,10 @@ async function pushSubmodules(repoPath: string) {
         try {
             const submoduleGit = simpleGit(dir);
             const status = await submoduleGit.status();
-            if (status.modified.length > 0 || status.staged.length > 0) {
+            if (status.behind > 0) {
+                await submoduleGit.pull();
+            }
+            if (status.ahead > 0) {
                 await submoduleGit.push();
             }
         } catch (err) {
@@ -101,7 +104,10 @@ async function pushSubmodules(repoPath: string) {
 async function pushMainRepo(repoPath: string) {
     const mainRepoGit = simpleGit(repoPath);
     const status = await mainRepoGit.status();
-    if (status.modified.length > 0 || status.staged.length > 0) {
+    if (status.behind > 0) {
+        await mainRepoGit.pull();
+    }
+    if (status.ahead > 0) {
         await mainRepoGit.push();
     }
 }
@@ -109,8 +115,8 @@ async function getSubmoduleDirs(repoPath: string): Promise<string[]> {
     const gitInstance = simpleGit(repoPath);
     const submoduleStatus = await gitInstance.subModule(['status']);
     return submoduleStatus.split('\n')
-        .filter(line => line.trim() && line.includes('submodule'))
-        .map(line => path.join(repoPath, line.split(' ')[1].trim()));
+        .filter(line => !!line.trim())
+        .map(line => path.join(repoPath, line.split(' ')[2].trim()));
 }
 async function checkoutBranchForSubmodules(
     repoPath: string,
